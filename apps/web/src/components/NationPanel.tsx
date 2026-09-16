@@ -1,6 +1,5 @@
-import type { Nation } from "@/engine/types";
-import { summarizeNations } from "@/engine/nationSummary";
-import type { Pop } from "@/engine/types";
+import type { Nation, Pop } from "@/engine/types";
+import { countPopsByOwner } from "@/engine/nationSummary";
 
 export default function NationPanel({
   nations,
@@ -11,8 +10,7 @@ export default function NationPanel({
   pops: Pop[];
   onTick: () => void;
 }) {
-  const counts = summarizeNations(pops);
-  const countByName = new Map(counts.map((c) => [c.name, c]));
+  const counts = countPopsByOwner(pops);
 
   return (
     <aside className="h-full w-72 shrink-0 overflow-y-auto border-l border-zinc-700 bg-zinc-900 p-3 text-zinc-100">
@@ -30,7 +28,7 @@ export default function NationPanel({
       </div>
       <ul className="space-y-2">
         {nations.map((n) => {
-          const c = countByName.get(n.name);
+          const c = counts.get(n.id);
           return (
             <li key={n.id} className="rounded bg-zinc-800 px-2 py-1">
               <div className="flex items-center gap-2">

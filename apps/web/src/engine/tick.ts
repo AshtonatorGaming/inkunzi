@@ -5,7 +5,7 @@ export function taxFromPops(popCount: number): number {
 }
 
 export function tickNation(nation: Nation, pops: Pop[]): Nation {
-  const owned = pops.filter((p) => p.owner === nation.name).length;
+  const owned = pops.filter((p) => p.ownerId === nation.id).length;
   return {
     ...nation,
     treasury: nation.treasury + taxFromPops(owned),

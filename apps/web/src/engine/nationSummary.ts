@@ -1,18 +1,17 @@
 import type { Pop } from "./types";
 
-export type NationSummary = {
-  name: string;
+export type NationCounts = {
+  ownerId: string;
   pops: number;
   settled: number;
   nomad: number;
 };
 
-export function summarizeNations(pops: Pop[]): NationSummary[] {
-  const byName = new Map<string, NationSummary>();
+export function countPopsByOwner(pops: Pop[]): Map<string, NationCounts> {
+  const byId = new Map<string, NationCounts>();
   for (const pop of pops) {
-    const name = pop.owner || "Unclaimed";
-    const row = byName.get(name) ?? {
-      name,
+    const row = byId.get(pop.ownerId) ?? {
+      ownerId: pop.ownerId,
       pops: 0,
       settled: 0,
       nomad: 0,
@@ -20,7 +19,7 @@ export function summarizeNations(pops: Pop[]): NationSummary[] {
     row.pops += 1;
     if (pop.settled) row.settled += 1;
     else row.nomad += 1;
-    byName.set(name, row);
+    byId.set(pop.ownerId, row);
   }
-  return [...byName.values()].sort((a, b) => b.pops - a.pops);
+  return byId;
 }

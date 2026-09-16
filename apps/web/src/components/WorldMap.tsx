@@ -53,7 +53,7 @@ export default function WorldMap({
   onRemove,
 }: Props) {
   const [placing, setPlacing] = useState(false);
-  const colorByName = new Map(nations.map((n) => [n.name, n.color]));
+  const colorById = new Map(nations.map((n) => [n.id, n.color]));
 
   return (
     <div className="relative h-full w-full">
@@ -90,7 +90,7 @@ export default function WorldMap({
             radius={8}
             pathOptions={{
               color: pop.settled ? "#111" : "#a33",
-              fillColor: colorByName.get(pop.owner) ?? "#ccc",
+              fillColor: colorById.get(pop.ownerId) ?? "#ccc",
               fillOpacity: 0.9,
               weight: 2,
             }}
@@ -98,6 +98,7 @@ export default function WorldMap({
             <Popup>
               <PopEditor
                 pop={pop}
+                nations={nations}
                 onChange={(patch) => onUpdate(pop.id, patch)}
                 onDelete={() => onRemove(pop.id)}
               />

@@ -1,13 +1,15 @@
 "use client";
 
-import type { Pop } from "@/engine/types";
+import type { Nation, Pop } from "@/engine/types";
 
 export default function PopEditor({
   pop,
+  nations,
   onChange,
   onDelete,
 }: {
   pop: Pop;
+  nations: Nation[];
   onChange: (patch: Partial<Pop>) => void;
   onDelete: () => void;
 }) {
@@ -15,11 +17,17 @@ export default function PopEditor({
     <div className="flex min-w-48 flex-col gap-1 text-sm">
       <label>
         Owner
-        <input
+        <select
           className="mt-0.5 w-full border px-1"
-          value={pop.owner}
-          onChange={(e) => onChange({ owner: e.target.value })}
-        />
+          value={pop.ownerId}
+          onChange={(e) => onChange({ ownerId: e.target.value })}
+        >
+          {nations.map((n) => (
+            <option key={n.id} value={n.id}>
+              {n.name}
+            </option>
+          ))}
+        </select>
       </label>
       <label>
         Culture

@@ -1,15 +1,4 @@
 export type PopId = string;
-
-export type Pop = {
-  id: PopId;
-  x: number;
-  y: number;
-  owner: string;
-  culture: string;
-  religion: string;
-  settled: boolean;
-};
-
 export type NationId = string;
 
 export type Nation = {
@@ -18,4 +7,14 @@ export type Nation = {
   color: string;
   treasury: number;
   stability: number;
+};
+
+export type Pop = {
+  id: PopId;
+  x: number;
+  y: number;
+  ownerId: NationId;
+  culture: string;
+  religion: string;
+  settled: boolean;
 };
