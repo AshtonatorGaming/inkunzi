@@ -20,6 +20,7 @@ export function useNodes() {
 
   return {
     nodes,
+    setNodes,
     place: (x: number, y: number) =>
       setNodes((cur) => [...cur, makeNode(x, y)]),
     update: (id: string, patch: Partial<ResourceNode>) =>

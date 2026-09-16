@@ -47,3 +47,22 @@ export type Army = {
   ownerId: NationId;
   strength: number;
 };
+
+export type Session = {
+  name: string;
+  mechanicalTurn: number;
+  calendarDay: number;
+  daysPerTurn: number;
+  mapWidth: number;
+  mapHeight: number;
+  pixelsPerDayMarch: number;
+};
+
+export type WorldSnapshot = {
+  version: 1;
+  session: Session;
+  nations: Nation[];
+  pops: Pop[];
+  nodes: ResourceNode[];
+  armies: Army[];
+};

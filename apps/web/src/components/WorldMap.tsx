@@ -15,18 +15,11 @@ import PopEditor from "./PopEditor";
 import NodeEditor from "./NodeEditor";
 import ArmyEditor from "./ArmyEditor";
 
-const WIDTH = 6145;
-const HEIGHT = 3530;
-const PAD = 400;
-const BOUNDS = new LatLngBounds([0, 0], [HEIGHT, WIDTH]);
-const VIEW_BOUNDS = new LatLngBounds(
-  [-PAD, -PAD],
-  [HEIGHT + PAD, WIDTH + PAD]
-);
-
 type Tool = "none" | "pop" | "node" | "army";
 
 type Props = {
+  mapWidth: number;
+  mapHeight: number;
   pops: Pop[];
   nodes: ResourceNode[];
   armies: Army[];
@@ -64,6 +57,8 @@ function PlaceTool({
 }
 
 export default function WorldMap({
+  mapWidth,
+  mapHeight,
   pops,
   nodes,
   armies,
@@ -81,8 +76,18 @@ export default function WorldMap({
   const [tool, setTool] = useState<Tool>("none");
   const [layer, setLayer] = useState<MapLayer>("all");
   const colorById = new Map(nations.map((n) => [n.id, n.color]));
+  const PAD = 400;
+  const BOUNDS = new LatLngBounds([0, 0], [mapHeight, mapWidth]);
+  const VIEW_BOUNDS = new LatLngBounds(
+    [-PAD, -PAD],
+    [mapHeight + PAD, mapWidth + PAD]
+  );
 
-  const showPops = layer === "all" || layer === "political" || layer === "culture" || layer === "religion";
+  const showPops =
+    layer === "all" ||
+    layer === "political" ||
+    layer === "culture" ||
+    layer === "religion";
   const showNodes = layer === "all" || layer === "resources";
   const showArmies = layer === "all" || layer === "military";
 
@@ -139,7 +144,7 @@ export default function WorldMap({
         </span>
       </div>
       <MapContainer
-        key="inkunzi-world"
+        key={`inkunzi-world-${mapWidth}x${mapHeight}`}
         crs={CRS.Simple}
         bounds={BOUNDS}
         maxBounds={VIEW_BOUNDS}

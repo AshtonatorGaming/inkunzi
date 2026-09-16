@@ -6,6 +6,8 @@ import type { Army, Nation, Pop, ResourceNode } from "@/engine/types";
 const WorldMap = dynamic(() => import("./WorldMap"), { ssr: false });
 
 type Props = {
+  mapWidth: number;
+  mapHeight: number;
   pops: Pop[];
   nodes: ResourceNode[];
   armies: Army[];

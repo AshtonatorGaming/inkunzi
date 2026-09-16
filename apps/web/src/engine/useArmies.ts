@@ -26,6 +26,7 @@ export function useArmies() {
 
   return {
     armies,
+    setArmies,
     place: (x: number, y: number) =>
       setArmies((cur) => [...cur, makeArmy(x, y)]),
     update: (id: string, patch: Partial<Army>) =>

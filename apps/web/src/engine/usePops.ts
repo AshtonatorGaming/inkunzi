@@ -20,6 +20,7 @@ export function usePops() {
 
   return {
     pops,
+    setPops,
     place: (x: number, y: number) =>
       setPops((cur) => [...cur, makePop(x, y)]),
     update: (id: string, patch: Partial<Pop>) =>
