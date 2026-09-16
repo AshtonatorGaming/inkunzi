@@ -73,7 +73,7 @@ export default function WorldMap() {
 
   return (
     <div className="relative h-full w-full">
-      <div className="absolute left-3 top-3 z-[1000] flex gap-2">
+      <div className="absolute left-1/2 top-3 z-[1000] flex -translate-x-1/2 gap-2 rounded bg-zinc-900/80 px-2 py-1">
         <button
           type="button"
           onClick={() => setPlacing((on) => !on)}
