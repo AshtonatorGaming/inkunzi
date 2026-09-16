@@ -6,15 +6,17 @@ import { loadPops, savePops, makePop, updatePop, removePop } from "./popStore";
 
 export function usePops() {
   const [pops, setPops] = useState<Pop[]>([]);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setPops(loadPops());
+    setReady(true);
   }, []);
 
   useEffect(() => {
-    if (pops.length === 0) return;
+    if (!ready) return;
     savePops(pops);
-  }, [pops]);
+  }, [pops, ready]);
 
   return {
     pops,

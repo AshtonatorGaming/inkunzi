@@ -6,14 +6,17 @@ import { loadNodes, saveNodes, makeNode, updateNode, removeNode } from "./nodeSt
 
 export function useNodes() {
   const [nodes, setNodes] = useState<ResourceNode[]>([]);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setNodes(loadNodes());
+    setReady(true);
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
     saveNodes(nodes);
-  }, [nodes]);
+  }, [nodes, ready]);
 
   return {
     nodes,

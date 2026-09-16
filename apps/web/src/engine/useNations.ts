@@ -6,15 +6,17 @@ import { loadNations, saveNations, updateNation } from "./nationStore";
 
 export function useNations() {
   const [nations, setNations] = useState<Nation[]>([]);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setNations(loadNations());
+    setReady(true);
   }, []);
 
   useEffect(() => {
-    if (nations.length === 0) return;
+    if (!ready) return;
     saveNations(nations);
-  }, [nations]);
+  }, [nations, ready]);
 
   return {
     nations,
