@@ -9,10 +9,11 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import { CRS, LatLngBounds } from "leaflet";
-import type { Nation, Pop, ResourceNode } from "@/engine/types";
+import type { Army, Nation, Pop, ResourceNode } from "@/engine/types";
 import { MAP_LAYERS, colorFromKey, type MapLayer } from "@/engine/mapLayers";
 import PopEditor from "./PopEditor";
 import NodeEditor from "./NodeEditor";
+import ArmyEditor from "./ArmyEditor";
 
 const WIDTH = 6145;
 const HEIGHT = 3530;
@@ -23,33 +24,40 @@ const VIEW_BOUNDS = new LatLngBounds(
   [HEIGHT + PAD, WIDTH + PAD]
 );
 
-type Tool = "none" | "pop" | "node";
+type Tool = "none" | "pop" | "node" | "army";
 
 type Props = {
   pops: Pop[];
   nodes: ResourceNode[];
+  armies: Army[];
   nations: Nation[];
   onPlacePop: (y: number, x: number) => void;
   onPlaceNode: (y: number, x: number) => void;
+  onPlaceArmy: (y: number, x: number) => void;
   onUpdatePop: (id: string, patch: Partial<Pop>) => void;
   onRemovePop: (id: string) => void;
   onUpdateNode: (id: string, patch: Partial<ResourceNode>) => void;
   onRemoveNode: (id: string) => void;
+  onUpdateArmy: (id: string, patch: Partial<Army>) => void;
+  onRemoveArmy: (id: string) => void;
 };
 
 function PlaceTool({
   tool,
   onPlacePop,
   onPlaceNode,
+  onPlaceArmy,
 }: {
   tool: Tool;
   onPlacePop: (y: number, x: number) => void;
   onPlaceNode: (y: number, x: number) => void;
+  onPlaceArmy: (y: number, x: number) => void;
 }) {
   useMapEvents({
     click(e) {
       if (tool === "pop") onPlacePop(e.latlng.lat, e.latlng.lng);
       if (tool === "node") onPlaceNode(e.latlng.lat, e.latlng.lng);
+      if (tool === "army") onPlaceArmy(e.latlng.lat, e.latlng.lng);
     },
   });
   return null;
@@ -58,20 +66,25 @@ function PlaceTool({
 export default function WorldMap({
   pops,
   nodes,
+  armies,
   nations,
   onPlacePop,
   onPlaceNode,
+  onPlaceArmy,
   onUpdatePop,
   onRemovePop,
   onUpdateNode,
   onRemoveNode,
+  onUpdateArmy,
+  onRemoveArmy,
 }: Props) {
   const [tool, setTool] = useState<Tool>("none");
   const [layer, setLayer] = useState<MapLayer>("all");
   const colorById = new Map(nations.map((n) => [n.id, n.color]));
 
-  const showPops = layer !== "resources";
+  const showPops = layer === "all" || layer === "political" || layer === "culture" || layer === "religion";
   const showNodes = layer === "all" || layer === "resources";
+  const showArmies = layer === "all" || layer === "military";
 
   function popFill(pop: Pop): string {
     if (layer === "culture") return colorFromKey(pop.culture);
@@ -100,6 +113,15 @@ export default function WorldMap({
         >
           Place node
         </button>
+        <button
+          type="button"
+          onClick={() => setTool((t) => (t === "army" ? "none" : "army"))}
+          className={`rounded px-3 py-1 text-sm font-medium ${
+            tool === "army" ? "bg-amber-500 text-black" : "bg-zinc-800 text-zinc-100"
+          }`}
+        >
+          Place army
+        </button>
         {MAP_LAYERS.map((l) => (
           <button
             key={l.id}
@@ -113,7 +135,7 @@ export default function WorldMap({
           </button>
         ))}
         <span className="self-center text-xs text-zinc-300">
-          {pops.length} pops · {nodes.length} nodes
+          {pops.length} pops · {nodes.length} nodes · {armies.length} armies
         </span>
       </div>
       <MapContainer
@@ -127,7 +149,12 @@ export default function WorldMap({
         style={{ height: "100%", width: "100%", background: "#1a1a16" }}
       >
         <ImageOverlay url="/maps/world.png" bounds={BOUNDS} />
-        <PlaceTool tool={tool} onPlacePop={onPlacePop} onPlaceNode={onPlaceNode} />
+        <PlaceTool
+          tool={tool}
+          onPlacePop={onPlacePop}
+          onPlaceNode={onPlaceNode}
+          onPlaceArmy={onPlaceArmy}
+        />
         {showPops &&
           pops.map((pop) => (
             <CircleMarker
@@ -170,6 +197,29 @@ export default function WorldMap({
                   nations={nations}
                   onChange={(patch) => onUpdateNode(node.id, patch)}
                   onDelete={() => onRemoveNode(node.id)}
+                />
+              </Popup>
+            </CircleMarker>
+          ))}
+        {showArmies &&
+          armies.map((army) => (
+            <CircleMarker
+              key={army.id}
+              center={[army.y, army.x]}
+              radius={10}
+              pathOptions={{
+                color: "#111",
+                fillColor: colorById.get(army.ownerId) ?? "#ccc",
+                fillOpacity: 0.95,
+                weight: 3,
+              }}
+            >
+              <Popup>
+                <ArmyEditor
+                  army={army}
+                  nations={nations}
+                  onChange={(patch) => onUpdateArmy(army.id, patch)}
+                  onDelete={() => onRemoveArmy(army.id)}
                 />
               </Popup>
             </CircleMarker>

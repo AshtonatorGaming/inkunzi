@@ -2,6 +2,7 @@ export type PopId = string;
 export type NationId = string;
 export type ResourceId = string;
 export type NodeId = string;
+export type ArmyId = string;
 
 export type ResourceDef = {
   id: ResourceId;
@@ -37,4 +38,12 @@ export type ResourceNode = {
   resourceId: ResourceId;
   ownerId: NationId;
   yield: number;
+};
+
+export type Army = {
+  id: ArmyId;
+  x: number;
+  y: number;
+  ownerId: NationId;
+  strength: number;
 };

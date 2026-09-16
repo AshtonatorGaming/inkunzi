@@ -1,4 +1,10 @@
-export type MapLayer = "all" | "political" | "culture" | "religion" | "resources";
+export type MapLayer =
+  | "all"
+  | "political"
+  | "culture"
+  | "religion"
+  | "resources"
+  | "military";
 
 export const MAP_LAYERS: { id: MapLayer; label: string }[] = [
   { id: "all", label: "All" },
@@ -6,6 +12,7 @@ export const MAP_LAYERS: { id: MapLayer; label: string }[] = [
   { id: "culture", label: "Culture" },
   { id: "religion", label: "Religion" },
   { id: "resources", label: "Resources" },
+  { id: "military", label: "Military" },
 ];
 
 const UNSET = new Set(["", "unknown", "unclaimed", "none", "unset"]);
