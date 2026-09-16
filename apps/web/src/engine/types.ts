@@ -1,5 +1,14 @@
 export type PopId = string;
 export type NationId = string;
+export type ResourceId = string;
+
+export type ResourceDef = {
+  id: ResourceId;
+  label: string;
+  kind: "food" | "material" | "wealth" | "military";
+};
+
+export type ResourceLedger = Record<ResourceId, number>;
 
 export type Nation = {
   id: NationId;
@@ -7,6 +16,7 @@ export type Nation = {
   color: string;
   treasury: number;
   stability: number;
+  resources: ResourceLedger;
 };
 
 export type Pop = {

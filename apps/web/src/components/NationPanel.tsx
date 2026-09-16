@@ -1,5 +1,6 @@
 import type { Nation, Pop } from "@/engine/types";
 import { countPopsByOwner } from "@/engine/nationSummary";
+import { RESOURCES } from "@/packs/core/resources";
 
 export default function NationPanel({
   nations,
@@ -11,6 +12,7 @@ export default function NationPanel({
   onTick: () => void;
 }) {
   const counts = countPopsByOwner(pops);
+  const foodLabel = RESOURCES.find((r) => r.id === "food")?.label ?? "food";
 
   return (
     <aside className="h-full w-72 shrink-0 overflow-y-auto border-l border-zinc-700 bg-zinc-900 p-3 text-zinc-100">
@@ -39,7 +41,8 @@ export default function NationPanel({
                 <span className="font-medium">{n.name}</span>
               </div>
               <div className="text-xs text-zinc-400">
-                {c?.pops ?? 0} pops · treasury {n.treasury} · stab {n.stability}
+                {c?.pops ?? 0} pops · treasury {n.treasury} · {foodLabel}{" "}
+                {n.resources.food ?? 0} · stab {n.stability}
               </div>
             </li>
           );

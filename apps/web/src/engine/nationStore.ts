@@ -1,7 +1,24 @@
 import type { Nation } from "./types";
 import { STARTER_NATIONS } from "@/packs/core/starterNations";
+import { emptyLedger } from "@/packs/core/resources";
 
-const KEY = "inkunzi.nations.v1";
+const KEY = "inkunzi.nations.v2";
+const LEGACY_KEY = "inkunzi.nations.v1";
+
+type LegacyNation = Nation & { grain?: number };
+
+function normalize(n: LegacyNation): Nation {
+  const resources = { ...emptyLedger(), ...(n.resources ?? {}) };
+  if (n.grain != null && resources.food === 0) resources.food = n.grain;
+  return {
+    id: n.id,
+    name: n.name,
+    color: n.color,
+    treasury: n.treasury ?? 0,
+    stability: n.stability ?? 50,
+    resources,
+  };
+}
 
 function mergeWithSeed(saved: Nation[]): Nation[] {
   const byId = new Map(saved.map((n) => [n.id, n]));
@@ -13,14 +30,22 @@ function mergeWithSeed(saved: Nation[]): Nation[] {
   );
 }
 
+function read(): Nation[] | null {
+  if (typeof window === "undefined") return null;
+  for (const key of [KEY, LEGACY_KEY]) {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) continue;
+    const parsed = JSON.parse(raw) as LegacyNation[];
+    if (Array.isArray(parsed) && parsed.length) return parsed.map(normalize);
+  }
+  return null;
+}
+
 export function loadNations(): Nation[] {
-  if (typeof window === "undefined") return STARTER_NATIONS;
   try {
-    const raw = window.localStorage.getItem(KEY);
-    if (!raw) return STARTER_NATIONS;
-    const parsed = JSON.parse(raw) as Nation[];
-    if (!Array.isArray(parsed) || parsed.length === 0) return STARTER_NATIONS;
-    return mergeWithSeed(parsed);
+    const saved = read();
+    if (!saved) return STARTER_NATIONS;
+    return mergeWithSeed(saved);
   } catch {
     return STARTER_NATIONS;
   }
