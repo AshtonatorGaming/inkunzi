@@ -8,6 +8,8 @@ export const MAP_LAYERS: { id: MapLayer; label: string }[] = [
   { id: "resources", label: "Resources" },
 ];
 
+const UNSET = new Set(["", "unknown", "unclaimed", "none", "unset"]);
+
 const PALETTE = [
   "#66bb44",
   "#4488aa",
@@ -20,7 +22,11 @@ const PALETTE = [
 ];
 
 export function colorFromKey(key: string): string {
+  const normalized = key.trim().toLowerCase();
+  if (UNSET.has(normalized)) return "#cccccc";
   let h = 0;
-  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
+  for (let i = 0; i < normalized.length; i++) {
+    h = (h * 31 + normalized.charCodeAt(i)) | 0;
+  }
   return PALETTE[Math.abs(h) % PALETTE.length];
 }
