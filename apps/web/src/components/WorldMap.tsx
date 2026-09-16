@@ -36,17 +36,36 @@ const STARTER_POPS: Pop[] = [
   { id: "p4", y: 280, x: 1500, owner: "Horde", culture: "Steppe", religion: "Sky", settled: false },
 ];
 
-function ClickLog() {
+function PlacePops({
+  onPlace,
+}: {
+  onPlace: (y: number, x: number) => void;
+}) {
   useMapEvents({
     click(e) {
-      console.log("map click", { y: e.latlng.lat, x: e.latlng.lng });
+      onPlace(e.latlng.lat, e.latlng.lng);
     },
   });
   return null;
 }
 
 export default function WorldMap() {
-  const [pops] = useState(STARTER_POPS);
+  const [pops, setPops] = useState<Pop[]>(STARTER_POPS);
+
+  function placePop(y: number, x: number) {
+    setPops((current) => [
+      ...current,
+      {
+        id: `p${Date.now()}`,
+        y,
+        x,
+        owner: "Unclaimed",
+        culture: "Unknown",
+        religion: "Unknown",
+        settled: true,
+      },
+    ]);
+  }
 
   return (
     <MapContainer
@@ -59,7 +78,7 @@ export default function WorldMap() {
       style={{ height: "100%", width: "100%", background: "#1a1a16" }}
     >
       <ImageOverlay url="/maps/world.png" bounds={BOUNDS} />
-      <ClickLog />
+      <PlacePops onPlace={placePop} />
       {pops.map((pop) => (
         <CircleMarker
           key={pop.id}
@@ -72,7 +91,9 @@ export default function WorldMap() {
                 ? "#6b4"
                 : pop.owner === "Tunnu"
                   ? "#48a"
-                  : "#c84",
+                  : pop.owner === "Unclaimed"
+                    ? "#ccc"
+                    : "#c84",
             fillOpacity: 0.9,
             weight: 2,
           }}
