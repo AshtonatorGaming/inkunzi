@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   MapContainer,
   ImageOverlay,
@@ -12,7 +12,12 @@ import { CRS, LatLngBounds } from "leaflet";
 
 const WIDTH = 6145;
 const HEIGHT = 3530;
+const PAD = 400;
 const BOUNDS = new LatLngBounds([0, 0], [HEIGHT, WIDTH]);
+const VIEW_BOUNDS = new LatLngBounds(
+  [-PAD, -PAD],
+  [HEIGHT + PAD, WIDTH + PAD]
+);
 
 type Pop = {
   id: string;
@@ -43,23 +48,17 @@ function ClickLog() {
 export default function WorldMap() {
   const [pops] = useState(STARTER_POPS);
 
-  useEffect(() => {
-    // leaflet icons look for images in / — fine for circles
-  }, []);
-
   return (
     <MapContainer
       crs={CRS.Simple}
       bounds={BOUNDS}
-      maxBounds={BOUNDS}
-      minZoom={-2}
-      maxZoom={2}
+      maxBounds={VIEW_BOUNDS}
+      maxBoundsViscosity={0.6}
+      minZoom={-3}
+      maxZoom={3}
       style={{ height: "100%", width: "100%", background: "#1a1a16" }}
     >
-      <ImageOverlay
-        url="/maps/world.png"
-        bounds={BOUNDS}
-      />
+      <ImageOverlay url="/maps/world.png" bounds={BOUNDS} />
       <ClickLog />
       {pops.map((pop) => (
         <CircleMarker
@@ -68,7 +67,12 @@ export default function WorldMap() {
           radius={8}
           pathOptions={{
             color: pop.settled ? "#111" : "#a33",
-            fillColor: pop.owner === "Vestoria" ? "#6b4" : pop.owner === "Tunnu" ? "#48a" : "#c84",
+            fillColor:
+              pop.owner === "Vestoria"
+                ? "#6b4"
+                : pop.owner === "Tunnu"
+                  ? "#48a"
+                  : "#c84",
             fillOpacity: 0.9,
             weight: 2,
           }}
