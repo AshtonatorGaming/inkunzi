@@ -32,3 +32,11 @@ export function makePop(x: number, y: number): Pop {
     settled: true,
   };
 }
+
+export function updatePop(pops: Pop[], id: string, patch: Partial<Pop>): Pop[] {
+  return pops.map((pop) => (pop.id === id ? { ...pop, ...patch } : pop));
+}
+
+export function removePop(pops: Pop[], id: string): Pop[] {
+  return pops.filter((pop) => pop.id !== id);
+}

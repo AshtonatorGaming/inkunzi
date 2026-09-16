@@ -10,7 +10,8 @@ import {
 } from "react-leaflet";
 import { CRS, LatLngBounds } from "leaflet";
 import type { Pop } from "@/engine/types";
-import { loadPops, savePops, makePop } from "@/engine/popStore";
+import { loadPops, savePops, makePop, updatePop, removePop } from "@/engine/popStore";
+import PopEditor from "./PopEditor";
 
 const WIDTH = 6145;
 const HEIGHT = 3530;
@@ -101,16 +102,14 @@ export default function WorldMap() {
             }}
           >
             <Popup>
-              <strong>{pop.owner}</strong>
-              <br />
-              {pop.culture} / {pop.religion}
-              <br />
-              {pop.settled ? "settled" : "nomad"}
-              <br />
-              <small>
-                {pop.x.toFixed(0)}, {pop.y.toFixed(0)}
-              </small>
-            </Popup>
+  <PopEditor
+    pop={pop}
+    onChange={(patch) =>
+      setPops((current) => updatePop(current, pop.id, patch))
+    }
+    onDelete={() => setPops((current) => removePop(current, pop.id))}
+  />
+</Popup>
           </CircleMarker>
         ))}
       </MapContainer>
