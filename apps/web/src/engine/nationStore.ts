@@ -7,6 +7,10 @@ const LEGACY_KEY = "inkunzi.nations.v1";
 
 type LegacyNation = Nation & { grain?: number };
 
+function slug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "nation";
+}
+
 function normalize(n: LegacyNation): Nation {
   const resources = { ...emptyLedger(), ...(n.resources ?? {}) };
   if (n.grain != null && resources.food === 0) resources.food = n.grain;
@@ -62,4 +66,19 @@ export function updateNation(
   patch: Partial<Nation>
 ): Nation[] {
   return nations.map((n) => (n.id === id ? { ...n, ...patch } : n));
+}
+
+export function makeNation(name: string, color = "#888888"): Nation {
+  return {
+    id: `${slug(name)}-${crypto.randomUUID().slice(0, 8)}`,
+    name: name.trim() || "New Nation",
+    color,
+    treasury: 20,
+    stability: 50,
+    resources: { ...emptyLedger(), food: 8 },
+  };
+}
+
+export function addNation(nations: Nation[], name: string, color?: string): Nation[] {
+  return [...nations, makeNation(name, color)];
 }

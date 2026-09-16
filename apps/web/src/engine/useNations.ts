@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Nation } from "./types";
-import { loadNations, saveNations, updateNation } from "./nationStore";
+import { loadNations, saveNations, updateNation, addNation } from "./nationStore";
 
 export function useNations() {
   const [nations, setNations] = useState<Nation[]>([]);
@@ -22,6 +22,8 @@ export function useNations() {
     nations,
     update: (id: string, patch: Partial<Nation>) =>
       setNations((cur) => updateNation(cur, id, patch)),
+    add: (name: string, color?: string) =>
+      setNations((cur) => addNation(cur, name, color)),
     setNations,
   };
 }
