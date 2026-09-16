@@ -14,18 +14,21 @@ const NAME_TO_ID: Record<string, string> = {
 
 type LegacyPop = Pop & { owner?: string };
 
+function resolveOwnerId(p: LegacyPop): string {
+  const fromName = p.owner ? NAME_TO_ID[p.owner] : undefined;
+  if (fromName && fromName !== "unclaimed") return fromName;
+  if (p.ownerId && p.ownerId !== "unclaimed") return p.ownerId;
+  return fromName || p.ownerId || "unclaimed";
+}
+
 function migrate(raw: unknown[]): Pop[] {
   return raw.map((row) => {
     const p = row as LegacyPop;
-    const ownerId =
-      p.ownerId ||
-      (p.owner ? NAME_TO_ID[p.owner] : undefined) ||
-      "unclaimed";
     return {
       id: p.id,
       x: p.x,
       y: p.y,
-      ownerId,
+      ownerId: resolveOwnerId(p),
       culture: p.culture,
       religion: p.religion,
       settled: p.settled,
