@@ -9,7 +9,7 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import { CRS, LatLngBounds } from "leaflet";
-import type { Pop } from "@/engine/types";
+import type { Nation, Pop } from "@/engine/types";
 import PopEditor from "./PopEditor";
 
 const WIDTH = 6145;
@@ -23,17 +23,11 @@ const VIEW_BOUNDS = new LatLngBounds(
 
 type Props = {
   pops: Pop[];
+  nations: Nation[];
   onPlace: (y: number, x: number) => void;
   onUpdate: (id: string, patch: Partial<Pop>) => void;
   onRemove: (id: string) => void;
 };
-
-function ownerColor(owner: string): string {
-  if (owner === "Vestoria") return "#6b4";
-  if (owner === "Tunnu") return "#48a";
-  if (owner === "Unclaimed") return "#ccc";
-  return "#c84";
-}
 
 function PlacePops({
   enabled,
@@ -51,8 +45,15 @@ function PlacePops({
   return null;
 }
 
-export default function WorldMap({ pops, onPlace, onUpdate, onRemove }: Props) {
+export default function WorldMap({
+  pops,
+  nations,
+  onPlace,
+  onUpdate,
+  onRemove,
+}: Props) {
   const [placing, setPlacing] = useState(false);
+  const colorByName = new Map(nations.map((n) => [n.name, n.color]));
 
   return (
     <div className="relative h-full w-full">
@@ -89,7 +90,7 @@ export default function WorldMap({ pops, onPlace, onUpdate, onRemove }: Props) {
             radius={8}
             pathOptions={{
               color: pop.settled ? "#111" : "#a33",
-              fillColor: ownerColor(pop.owner),
+              fillColor: colorByName.get(pop.owner) ?? "#ccc",
               fillOpacity: 0.9,
               weight: 2,
             }}
