@@ -37,12 +37,15 @@ const STARTER_POPS: Pop[] = [
 ];
 
 function PlacePops({
+  enabled,
   onPlace,
 }: {
+  enabled: boolean;
   onPlace: (y: number, x: number) => void;
 }) {
   useMapEvents({
     click(e) {
+      if (!enabled) return;
       onPlace(e.latlng.lat, e.latlng.lng);
     },
   });
@@ -51,6 +54,7 @@ function PlacePops({
 
 export default function WorldMap() {
   const [pops, setPops] = useState<Pop[]>(STARTER_POPS);
+  const [placing, setPlacing] = useState(false);
 
   function placePop(y: number, x: number) {
     setPops((current) => [
@@ -68,49 +72,65 @@ export default function WorldMap() {
   }
 
   return (
-    <MapContainer
-      crs={CRS.Simple}
-      bounds={BOUNDS}
-      maxBounds={VIEW_BOUNDS}
-      maxBoundsViscosity={0.6}
-      minZoom={-3}
-      maxZoom={3}
-      style={{ height: "100%", width: "100%", background: "#1a1a16" }}
-    >
-      <ImageOverlay url="/maps/world.png" bounds={BOUNDS} />
-      <PlacePops onPlace={placePop} />
-      {pops.map((pop) => (
-        <CircleMarker
-          key={pop.id}
-          center={[pop.y, pop.x]}
-          radius={8}
-          pathOptions={{
-            color: pop.settled ? "#111" : "#a33",
-            fillColor:
-              pop.owner === "Vestoria"
-                ? "#6b4"
-                : pop.owner === "Tunnu"
-                  ? "#48a"
-                  : pop.owner === "Unclaimed"
-                    ? "#ccc"
-                    : "#c84",
-            fillOpacity: 0.9,
-            weight: 2,
-          }}
+    <div className="relative h-full w-full">
+      <div className="absolute left-3 top-3 z-[1000] flex gap-2">
+        <button
+          type="button"
+          onClick={() => setPlacing((on) => !on)}
+          className={`rounded px-3 py-1 text-sm font-medium ${
+            placing ? "bg-amber-500 text-black" : "bg-zinc-800 text-zinc-100"
+          }`}
         >
-          <Popup>
-            <strong>{pop.owner}</strong>
-            <br />
-            {pop.culture} / {pop.religion}
-            <br />
-            {pop.settled ? "settled" : "nomad"}
-            <br />
-            <small>
-              {pop.x.toFixed(0)}, {pop.y.toFixed(0)}
-            </small>
-          </Popup>
-        </CircleMarker>
-      ))}
-    </MapContainer>
+          {placing ? "Placing…" : "Place pop"}
+        </button>
+        <span className="self-center text-xs text-zinc-300">
+          {pops.length} pops
+        </span>
+      </div>
+      <MapContainer
+        crs={CRS.Simple}
+        bounds={BOUNDS}
+        maxBounds={VIEW_BOUNDS}
+        maxBoundsViscosity={0.6}
+        minZoom={-3}
+        maxZoom={3}
+        style={{ height: "100%", width: "100%", background: "#1a1a16" }}
+      >
+        <ImageOverlay url="/maps/world.png" bounds={BOUNDS} />
+        <PlacePops enabled={placing} onPlace={placePop} />
+        {pops.map((pop) => (
+          <CircleMarker
+            key={pop.id}
+            center={[pop.y, pop.x]}
+            radius={8}
+            pathOptions={{
+              color: pop.settled ? "#111" : "#a33",
+              fillColor:
+                pop.owner === "Vestoria"
+                  ? "#6b4"
+                  : pop.owner === "Tunnu"
+                    ? "#48a"
+                    : pop.owner === "Unclaimed"
+                      ? "#ccc"
+                      : "#c84",
+              fillOpacity: 0.9,
+              weight: 2,
+            }}
+          >
+            <Popup>
+              <strong>{pop.owner}</strong>
+              <br />
+              {pop.culture} / {pop.religion}
+              <br />
+              {pop.settled ? "settled" : "nomad"}
+              <br />
+              <small>
+                {pop.x.toFixed(0)}, {pop.y.toFixed(0)}
+              </small>
+            </Popup>
+          </CircleMarker>
+        ))}
+      </MapContainer>
+    </div>
   );
 }
