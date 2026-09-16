@@ -1,0 +1,26 @@
+export type MapLayer = "all" | "political" | "culture" | "religion" | "resources";
+
+export const MAP_LAYERS: { id: MapLayer; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "political", label: "Political" },
+  { id: "culture", label: "Culture" },
+  { id: "religion", label: "Religion" },
+  { id: "resources", label: "Resources" },
+];
+
+const PALETTE = [
+  "#66bb44",
+  "#4488aa",
+  "#c88444",
+  "#aa4488",
+  "#44aaaa",
+  "#888844",
+  "#8866cc",
+  "#cc6666",
+];
+
+export function colorFromKey(key: string): string {
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
+  return PALETTE[Math.abs(h) % PALETTE.length];
+}
