@@ -9,3 +9,13 @@ export type Pop = {
   religion: string;
   settled: boolean;
 };
+
+export type NationId = string;
+
+export type Nation = {
+  id: NationId;
+  name: string;
+  color: string;
+  treasury: number;
+  stability: number;
+};
