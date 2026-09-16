@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import WorldMapLoader from "@/components/WorldMapLoader";
 import NationPanel from "@/components/NationPanel";
+import WindowFrame from "@/components/WindowFrame";
+import NationWindow from "@/components/NationWindow";
 import { usePops } from "@/engine/usePops";
 import { useNations } from "@/engine/useNations";
 import { useNodes } from "@/engine/useNodes";
@@ -10,6 +13,7 @@ import { useSession } from "@/engine/useSession";
 import { tickAll } from "@/engine/tick";
 import { advanceDay, advanceTurn } from "@/engine/sessionStore";
 import { buildSnapshot, downloadSnapshot, parseSnapshot } from "@/engine/worldIO";
+import { makeWindow, type GameWindow } from "@/engine/windows";
 import type { Session } from "@/engine/types";
 
 export default function Home() {
@@ -18,6 +22,7 @@ export default function Home() {
   const nodesState = useNodes();
   const armiesState = useArmies();
   const { session, setSession } = useSession();
+  const [windows, setWindows] = useState<GameWindow[]>([]);
 
   if (!session || !setSession) return null;
 
@@ -45,8 +50,17 @@ export default function Home() {
     armiesState.setArmies(snap.armies);
   }
 
+  function openNation(id: string) {
+    const n = nations.find((x) => x.id === id);
+    if (!n) return;
+    setWindows((cur) => [
+      ...cur,
+      makeWindow("nation", n.name, n.id, 72, 72 + cur.length * 24),
+    ]);
+  }
+
   return (
-    <main className="flex h-screen flex-col">
+    <main className="relative flex h-screen flex-col">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-700 bg-zinc-900 px-4 py-2 text-zinc-100">
         <h1 className="text-lg font-semibold">{current.name}</h1>
         <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-300">
@@ -113,8 +127,27 @@ export default function Home() {
             setSession(advanceTurn(current));
           }}
           onAdd={add}
+          onOpenNation={openNation}
         />
       </div>
+      {windows.map((win) => {
+        const nation = nations.find((n) => n.id === win.payload);
+        if (win.kind !== "nation" || !nation) return null;
+        return (
+          <WindowFrame
+            key={win.id}
+            win={win}
+            onMove={(id, x, y) =>
+              setWindows((cur) =>
+                cur.map((w) => (w.id === id ? { ...w, x, y } : w))
+              )
+            }
+            onClose={(id) => setWindows((cur) => cur.filter((w) => w.id !== id))}
+          >
+            <NationWindow nation={nation} pops={pops} />
+          </WindowFrame>
+        );
+      })}
     </main>
   );
 }

@@ -10,11 +10,13 @@ export default function NationPanel({
   pops,
   onTick,
   onAdd,
+  onOpenNation,
 }: {
   nations: Nation[];
   pops: Pop[];
   onTick: () => void;
   onAdd: (name: string) => void;
+  onOpenNation: (id: string) => void;
 }) {
   const counts = countPopsByOwner(pops);
   const [name, setName] = useState("");
@@ -62,7 +64,13 @@ export default function NationPanel({
                   className="h-3 w-3 rounded-full"
                   style={{ background: n.color }}
                 />
-                <span className="font-medium">{n.name}</span>
+                <button
+                  type="button"
+                  className="font-medium"
+                  onClick={() => onOpenNation(n.id)}
+                >
+                  {n.name}
+                </button>
               </div>
               <div className="text-xs text-zinc-400">
                 {c?.pops ?? 0} pops · $ {n.treasury} · stab {n.stability}
