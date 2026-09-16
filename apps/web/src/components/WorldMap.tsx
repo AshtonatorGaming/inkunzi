@@ -9,8 +9,9 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import { CRS, LatLngBounds } from "leaflet";
-import type { Nation, Pop } from "@/engine/types";
+import type { Nation, Pop, ResourceNode } from "@/engine/types";
 import PopEditor from "./PopEditor";
+import NodeEditor from "./NodeEditor";
 
 const WIDTH = 6145;
 const HEIGHT = 3530;
@@ -21,25 +22,33 @@ const VIEW_BOUNDS = new LatLngBounds(
   [HEIGHT + PAD, WIDTH + PAD]
 );
 
+type Tool = "none" | "pop" | "node";
+
 type Props = {
   pops: Pop[];
+  nodes: ResourceNode[];
   nations: Nation[];
-  onPlace: (y: number, x: number) => void;
-  onUpdate: (id: string, patch: Partial<Pop>) => void;
-  onRemove: (id: string) => void;
+  onPlacePop: (y: number, x: number) => void;
+  onPlaceNode: (y: number, x: number) => void;
+  onUpdatePop: (id: string, patch: Partial<Pop>) => void;
+  onRemovePop: (id: string) => void;
+  onUpdateNode: (id: string, patch: Partial<ResourceNode>) => void;
+  onRemoveNode: (id: string) => void;
 };
 
-function PlacePops({
-  enabled,
-  onPlace,
+function PlaceTool({
+  tool,
+  onPlacePop,
+  onPlaceNode,
 }: {
-  enabled: boolean;
-  onPlace: (y: number, x: number) => void;
+  tool: Tool;
+  onPlacePop: (y: number, x: number) => void;
+  onPlaceNode: (y: number, x: number) => void;
 }) {
   useMapEvents({
     click(e) {
-      if (!enabled) return;
-      onPlace(e.latlng.lat, e.latlng.lng);
+      if (tool === "pop") onPlacePop(e.latlng.lat, e.latlng.lng);
+      if (tool === "node") onPlaceNode(e.latlng.lat, e.latlng.lng);
     },
   });
   return null;
@@ -47,12 +56,16 @@ function PlacePops({
 
 export default function WorldMap({
   pops,
+  nodes,
   nations,
-  onPlace,
-  onUpdate,
-  onRemove,
+  onPlacePop,
+  onPlaceNode,
+  onUpdatePop,
+  onRemovePop,
+  onUpdateNode,
+  onRemoveNode,
 }: Props) {
-  const [placing, setPlacing] = useState(false);
+  const [tool, setTool] = useState<Tool>("none");
   const colorById = new Map(nations.map((n) => [n.id, n.color]));
 
   return (
@@ -60,15 +73,24 @@ export default function WorldMap({
       <div className="absolute left-1/2 top-3 z-[1000] flex -translate-x-1/2 gap-2 rounded bg-zinc-900/80 px-2 py-1">
         <button
           type="button"
-          onClick={() => setPlacing((on) => !on)}
+          onClick={() => setTool((t) => (t === "pop" ? "none" : "pop"))}
           className={`rounded px-3 py-1 text-sm font-medium ${
-            placing ? "bg-amber-500 text-black" : "bg-zinc-800 text-zinc-100"
+            tool === "pop" ? "bg-amber-500 text-black" : "bg-zinc-800 text-zinc-100"
           }`}
         >
-          {placing ? "Placing…" : "Place pop"}
+          Place pop
+        </button>
+        <button
+          type="button"
+          onClick={() => setTool((t) => (t === "node" ? "none" : "node"))}
+          className={`rounded px-3 py-1 text-sm font-medium ${
+            tool === "node" ? "bg-amber-500 text-black" : "bg-zinc-800 text-zinc-100"
+          }`}
+        >
+          Place node
         </button>
         <span className="self-center text-xs text-zinc-300">
-          {pops.length} pops
+          {pops.length} pops · {nodes.length} nodes
         </span>
       </div>
       <MapContainer
@@ -82,7 +104,7 @@ export default function WorldMap({
         style={{ height: "100%", width: "100%", background: "#1a1a16" }}
       >
         <ImageOverlay url="/maps/world.png" bounds={BOUNDS} />
-        <PlacePops enabled={placing} onPlace={onPlace} />
+        <PlaceTool tool={tool} onPlacePop={onPlacePop} onPlaceNode={onPlaceNode} />
         {pops.map((pop) => (
           <CircleMarker
             key={pop.id}
@@ -99,8 +121,30 @@ export default function WorldMap({
               <PopEditor
                 pop={pop}
                 nations={nations}
-                onChange={(patch) => onUpdate(pop.id, patch)}
-                onDelete={() => onRemove(pop.id)}
+                onChange={(patch) => onUpdatePop(pop.id, patch)}
+                onDelete={() => onRemovePop(pop.id)}
+              />
+            </Popup>
+          </CircleMarker>
+        ))}
+        {nodes.map((node) => (
+          <CircleMarker
+            key={node.id}
+            center={[node.y, node.x]}
+            radius={6}
+            pathOptions={{
+              color: "#222",
+              fillColor: "#e2c44d",
+              fillOpacity: 0.95,
+              weight: 2,
+            }}
+          >
+            <Popup>
+              <NodeEditor
+                node={node}
+                nations={nations}
+                onChange={(patch) => onUpdateNode(node.id, patch)}
+                onDelete={() => onRemoveNode(node.id)}
               />
             </Popup>
           </CircleMarker>

@@ -1,6 +1,7 @@
 export type PopId = string;
 export type NationId = string;
 export type ResourceId = string;
+export type NodeId = string;
 
 export type ResourceDef = {
   id: ResourceId;
@@ -27,4 +28,13 @@ export type Pop = {
   culture: string;
   religion: string;
   settled: boolean;
+};
+
+export type ResourceNode = {
+  id: NodeId;
+  x: number;
+  y: number;
+  resourceId: ResourceId;
+  ownerId: NationId;
+  yield: number;
 };
