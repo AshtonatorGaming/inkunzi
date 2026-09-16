@@ -13,6 +13,8 @@ export default function PopEditor({
   onChange: (patch: Partial<Pop>) => void;
   onDelete: () => void;
 }) {
+  const known = nations.some((n) => n.id === pop.ownerId);
+
   return (
     <div className="flex min-w-48 flex-col gap-1 text-sm">
       <label>
@@ -22,6 +24,9 @@ export default function PopEditor({
           value={pop.ownerId}
           onChange={(e) => onChange({ ownerId: e.target.value })}
         >
+          {!known && (
+            <option value={pop.ownerId}>{pop.ownerId} (missing)</option>
+          )}
           {nations.map((n) => (
             <option key={n.id} value={n.id}>
               {n.name}
