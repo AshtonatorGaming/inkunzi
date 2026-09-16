@@ -1,9 +1,17 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type { Pop } from "@/engine/types";
 
 const WorldMap = dynamic(() => import("./WorldMap"), { ssr: false });
 
-export default function WorldMapLoader() {
-  return <WorldMap />;
+type Props = {
+  pops: Pop[];
+  onPlace: (y: number, x: number) => void;
+  onUpdate: (id: string, patch: Partial<Pop>) => void;
+  onRemove: (id: string) => void;
+};
+
+export default function WorldMapLoader(props: Props) {
+  return <WorldMap {...props} />;
 }
