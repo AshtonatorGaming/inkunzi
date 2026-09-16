@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   MapContainer,
   ImageOverlay,
@@ -9,6 +9,8 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import { CRS, LatLngBounds } from "leaflet";
+import type { Pop } from "@/engine/types";
+import { loadPops, savePops, makePop } from "@/engine/popStore";
 
 const WIDTH = 6145;
 const HEIGHT = 3530;
@@ -19,22 +21,12 @@ const VIEW_BOUNDS = new LatLngBounds(
   [HEIGHT + PAD, WIDTH + PAD]
 );
 
-type Pop = {
-  id: string;
-  y: number;
-  x: number;
-  owner: string;
-  culture: string;
-  religion: string;
-  settled: boolean;
-};
-
-const STARTER_POPS: Pop[] = [
-  { id: "p1", y: 420, x: 610, owner: "Vestoria", culture: "Eldari", religion: "Solar", settled: true },
-  { id: "p2", y: 455, x: 640, owner: "Vestoria", culture: "Eldari", religion: "Solar", settled: true },
-  { id: "p3", y: 700, x: 1100, owner: "Tunnu", culture: "Tunnu", religion: "Mountain Folk", settled: true },
-  { id: "p4", y: 280, x: 1500, owner: "Horde", culture: "Steppe", religion: "Sky", settled: false },
-];
+function ownerColor(owner: string): string {
+  if (owner === "Vestoria") return "#6b4";
+  if (owner === "Tunnu") return "#48a";
+  if (owner === "Unclaimed") return "#ccc";
+  return "#c84";
+}
 
 function PlacePops({
   enabled,
@@ -53,22 +45,20 @@ function PlacePops({
 }
 
 export default function WorldMap() {
-  const [pops, setPops] = useState<Pop[]>(STARTER_POPS);
+  const [pops, setPops] = useState<Pop[]>([]);
   const [placing, setPlacing] = useState(false);
 
+  useEffect(() => {
+    setPops(loadPops());
+  }, []);
+
+  useEffect(() => {
+    if (pops.length === 0) return;
+    savePops(pops);
+  }, [pops]);
+
   function placePop(y: number, x: number) {
-    setPops((current) => [
-      ...current,
-      {
-        id: `p${Date.now()}`,
-        y,
-        x,
-        owner: "Unclaimed",
-        culture: "Unknown",
-        religion: "Unknown",
-        settled: true,
-      },
-    ]);
+    setPops((current) => [...current, makePop(x, y)]);
   }
 
   return (
@@ -105,14 +95,7 @@ export default function WorldMap() {
             radius={8}
             pathOptions={{
               color: pop.settled ? "#111" : "#a33",
-              fillColor:
-                pop.owner === "Vestoria"
-                  ? "#6b4"
-                  : pop.owner === "Tunnu"
-                    ? "#48a"
-                    : pop.owner === "Unclaimed"
-                      ? "#ccc"
-                      : "#c84",
+              fillColor: ownerColor(pop.owner),
               fillOpacity: 0.9,
               weight: 2,
             }}
