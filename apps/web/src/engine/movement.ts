@@ -10,19 +10,32 @@ export function distance(x1: number, y1: number, x2: number, y2: number): number
   return Math.hypot(x2 - x1, y2 - y1);
 }
 
-function projectOnSegment(
+function firstCircleHit(
   ax: number,
   ay: number,
   bx: number,
   by: number,
-  px: number,
-  py: number
-): { x: number; y: number; t: number } {
+  cx: number,
+  cy: number,
+  radius: number
+): { x: number; y: number; t: number } | null {
   const dx = bx - ax;
   const dy = by - ay;
-  const len2 = dx * dx + dy * dy;
-  if (len2 === 0) return { x: ax, y: ay, t: 0 };
-  const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2));
+  const fx = ax - cx;
+  const fy = ay - cy;
+  const a = dx * dx + dy * dy;
+  if (a === 0) return null;
+  const b = 2 * (fx * dx + fy * dy);
+  const c = fx * fx + fy * fy - radius * radius;
+  const disc = b * b - 4 * a * c;
+  if (disc < 0) return null;
+  const root = Math.sqrt(disc);
+  const t1 = (-b - root) / (2 * a);
+  const t2 = (-b + root) / (2 * a);
+  const t = [t1, t2]
+    .filter((n) => n >= 0 && n <= 1)
+    .sort((l, r) => l - r)[0];
+  if (t == null) return null;
   return { x: ax + dx * t, y: ay + dy * t, t };
 }
 
@@ -34,21 +47,20 @@ export function stopForZoc(
   blockers: Army[],
   radius = ZOC_PX
 ): { x: number; y: number; blockerId: string | null } {
-  let best = { x: toX, y: toY, blockerId: null as string | null, t: 2 };
+  let best: { x: number; y: number; blockerId: string | null; t: number } = {
+    x: toX,
+    y: toY,
+    blockerId: null,
+    t: 2,
+  };
 
   for (const b of blockers) {
-    const p = projectOnSegment(fromX, fromY, toX, toY, b.x, b.y);
-    if (distance(p.x, p.y, b.x, b.y) > radius) continue;
-    if (p.t >= best.t) continue;
-    const dx = fromX - b.x;
-    const dy = fromY - b.y;
-    const d = Math.hypot(dx, dy) || 1;
-    best = {
-      x: b.x + (dx / d) * radius,
-      y: b.y + (dy / d) * radius,
-      blockerId: b.id,
-      t: p.t,
-    };
+    if (distance(fromX, fromY, b.x, b.y) <= radius) {
+      return { x: fromX, y: fromY, blockerId: b.id };
+    }
+    const hit = firstCircleHit(fromX, fromY, toX, toY, b.x, b.y, radius);
+    if (!hit || hit.t >= best.t) continue;
+    best = { x: hit.x, y: hit.y, blockerId: b.id, t: hit.t };
   }
 
   return { x: best.x, y: best.y, blockerId: best.blockerId };
