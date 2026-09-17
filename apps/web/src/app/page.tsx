@@ -15,6 +15,7 @@ import { advanceDay, advanceTurn } from "@/engine/sessionStore";
 import { buildSnapshot, downloadSnapshot, parseSnapshot } from "@/engine/worldIO";
 import { makeWindow, type GameWindow } from "@/engine/windows";
 import { turnMarchRange } from "@/engine/movement";
+import { applyMoveBattles } from "@/engine/battle";
 import type { Session } from "@/engine/types";
 
 export default function Home() {
@@ -25,6 +26,7 @@ export default function Home() {
   const { session, setSession } = useSession();
   const [windows, setWindows] = useState<GameWindow[]>([]);
   const [selectedArmyId, setSelectedArmyId] = useState<string | null>(null);
+  const [log, setLog] = useState<string>("");
 
   if (!session || !setSession) return null;
 
@@ -61,6 +63,16 @@ export default function Home() {
     ]);
   }
 
+  function moveArmy(id: string, x: number, y: number) {
+    const moved = armiesState.armies.map((a) =>
+      a.id === id ? { ...a, x, y } : a
+    );
+    const result = applyMoveBattles(moved, id);
+    armiesState.setArmies(result.armies);
+    setLog(result.log[0] ?? "Marched.");
+    setSelectedArmyId(null);
+  }
+
   return (
     <main className="relative flex h-screen flex-col">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-700 bg-zinc-900 px-4 py-2 text-zinc-100">
@@ -70,6 +82,7 @@ export default function Home() {
             Turn {current.mechanicalTurn} · Day {current.calendarDay} ·{" "}
             {current.daysPerTurn}d/turn · march {current.pixelsPerDayMarch}px/day
           </span>
+          {log && <span className="text-amber-300">{log}</span>}
           <button
             type="button"
             className="rounded bg-zinc-800 px-2 py-1"
@@ -111,10 +124,7 @@ export default function Home() {
             armies={armiesState.armies}
             nations={nations}
             onSelectArmy={setSelectedArmyId}
-            onMoveArmy={(id, x, y) => {
-              armiesState.update(id, { x, y });
-              setSelectedArmyId(null);
-            }}
+            onMoveArmy={moveArmy}
             onPlacePop={(y, x) => place(x, y)}
             onPlaceNode={(y, x) => nodesState.place(x, y)}
             onPlaceArmy={(y, x) => armiesState.place(x, y)}
