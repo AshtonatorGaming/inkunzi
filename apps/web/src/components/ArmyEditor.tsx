@@ -6,13 +6,17 @@ import type { Army, Nation } from "@/engine/types";
 export default function ArmyEditor({
   army,
   nations,
+  marching,
   onChange,
   onDelete,
+  onMarch,
 }: {
   army: Army;
   nations: Nation[];
+  marching: boolean;
   onChange: (patch: Partial<Army>) => void;
   onDelete: () => void;
+  onMarch: () => void;
 }) {
   const [strengthText, setStrengthText] = useState(String(army.strength));
 
@@ -59,6 +63,15 @@ export default function ArmyEditor({
           }}
         />
       </label>
+      <button
+        type="button"
+        className={`mt-1 rounded px-2 py-1 ${
+          marching ? "bg-amber-500 text-black" : "bg-zinc-200 text-black"
+        }`}
+        onClick={onMarch}
+      >
+        {marching ? "Click map to march" : "March"}
+      </button>
       <button type="button" className="mt-1 text-left text-red-700" onClick={onDelete}>
         Delete army
       </button>

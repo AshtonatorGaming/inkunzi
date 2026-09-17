@@ -12,7 +12,7 @@ import {
 import { CRS, LatLngBounds } from "leaflet";
 import type { Army, Nation, Pop, ResourceNode } from "@/engine/types";
 import { MAP_LAYERS, colorFromKey, type MapLayer } from "@/engine/mapLayers";
-import { distance } from "@/engine/movement";
+import { distance, stopForZoc, ZOC_PX } from "@/engine/movement";
 import PopEditor from "./PopEditor";
 import NodeEditor from "./NodeEditor";
 import ArmyEditor from "./ArmyEditor";
@@ -24,6 +24,7 @@ type Props = {
   mapHeight: number;
   marchRange: number;
   selectedArmyId: string | null;
+  marchingArmyId: string | null;
   pops: Pop[];
   nodes: ResourceNode[];
   armies: Army[];
@@ -39,28 +40,27 @@ type Props = {
   onRemoveNode: (id: string) => void;
   onUpdateArmy: (id: string, patch: Partial<Army>) => void;
   onRemoveArmy: (id: string) => void;
+  onStartMarch: (id: string) => void;
 };
 
 function MapClicks({
   tool,
-  selectedArmyId,
+  marchingArmyId,
   armies,
   marchRange,
   onPlacePop,
   onPlaceNode,
   onPlaceArmy,
   onMoveArmy,
-  onSelectArmy,
 }: {
   tool: Tool;
-  selectedArmyId: string | null;
+  marchingArmyId: string | null;
   armies: Army[];
   marchRange: number;
   onPlacePop: (y: number, x: number) => void;
   onPlaceNode: (y: number, x: number) => void;
   onPlaceArmy: (y: number, x: number) => void;
   onMoveArmy: (id: string, x: number, y: number) => void;
-  onSelectArmy: (id: string | null) => void;
 }) {
   useMapEvents({
     click(e) {
@@ -78,18 +78,19 @@ function MapClicks({
         onPlaceArmy(y, x);
         return;
       }
-      const hit = armies.find((a) => distance(a.x, a.y, x, y) <= 16);
-      if (hit) {
-        onSelectArmy(hit.id);
-        return;
-      }
-      if (selectedArmyId) {
-        const army = armies.find((a) => a.id === selectedArmyId);
-        if (army && distance(army.x, army.y, x, y) <= marchRange) {
-          onMoveArmy(selectedArmyId, x, y);
-        }
-        onSelectArmy(null);
-      }
+      if (!marchingArmyId) return;
+      const army = armies.find((a) => a.id === marchingArmyId);
+      if (!army) return;
+      if (distance(army.x, army.y, x, y) > marchRange) return;
+      const foes = armies.filter(
+        (a) =>
+          a.id !== army.id &&
+          a.ownerId !== army.ownerId &&
+          a.ownerId !== "unclaimed" &&
+          army.ownerId !== "unclaimed"
+      );
+      const stopped = stopForZoc(army.x, army.y, x, y, foes);
+      onMoveArmy(army.id, stopped.x, stopped.y);
     },
   });
   return null;
@@ -100,6 +101,7 @@ export default function WorldMap({
   mapHeight,
   marchRange,
   selectedArmyId,
+  marchingArmyId,
   pops,
   nodes,
   armies,
@@ -115,6 +117,7 @@ export default function WorldMap({
   onRemoveNode,
   onUpdateArmy,
   onRemoveArmy,
+  onStartMarch,
 }: Props) {
   const [tool, setTool] = useState<Tool>("none");
   const [layer, setLayer] = useState<MapLayer>("all");
@@ -126,6 +129,7 @@ export default function WorldMap({
     [mapHeight + PAD, mapWidth + PAD]
   );
   const selected = armies.find((a) => a.id === selectedArmyId);
+  const marching = armies.find((a) => a.id === marchingArmyId);
 
   const showPops =
     layer === "all" ||
@@ -200,20 +204,26 @@ export default function WorldMap({
         <ImageOverlay url="/maps/world.png" bounds={BOUNDS} />
         <MapClicks
           tool={tool}
-          selectedArmyId={selectedArmyId}
+          marchingArmyId={marchingArmyId}
           armies={armies}
           marchRange={marchRange}
           onPlacePop={onPlacePop}
           onPlaceNode={onPlaceNode}
           onPlaceArmy={onPlaceArmy}
           onMoveArmy={onMoveArmy}
-          onSelectArmy={onSelectArmy}
         />
         {selected && (
           <Circle
             center={[selected.y, selected.x]}
+            radius={ZOC_PX}
+            pathOptions={{ color: "#cc6666", weight: 1, fillOpacity: 0.06 }}
+          />
+        )}
+        {marching && (
+          <Circle
+            center={[marching.y, marching.x]}
             radius={marchRange}
-            pathOptions={{ color: "#e2c44d", weight: 1, fillOpacity: 0.08 }}
+            pathOptions={{ color: "#e2c44d", weight: 1, fillOpacity: 0.05 }}
           />
         )}
         {showPops &&
@@ -276,7 +286,12 @@ export default function WorldMap({
                 },
               }}
               pathOptions={{
-                color: army.id === selectedArmyId ? "#e2c44d" : "#111",
+                color:
+                  army.id === marchingArmyId
+                    ? "#e2c44d"
+                    : army.id === selectedArmyId
+                      ? "#cc6666"
+                      : "#111",
                 fillColor: colorById.get(army.ownerId) ?? "#ccc",
                 fillOpacity: 0.95,
                 weight: 3,
@@ -286,8 +301,10 @@ export default function WorldMap({
                 <ArmyEditor
                   army={army}
                   nations={nations}
+                  marching={army.id === marchingArmyId}
                   onChange={(patch) => onUpdateArmy(army.id, patch)}
                   onDelete={() => onRemoveArmy(army.id)}
+                  onMarch={() => onStartMarch(army.id)}
                 />
               </Popup>
             </CircleMarker>

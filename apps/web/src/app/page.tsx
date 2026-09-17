@@ -26,6 +26,7 @@ export default function Home() {
   const { session, setSession } = useSession();
   const [windows, setWindows] = useState<GameWindow[]>([]);
   const [selectedArmyId, setSelectedArmyId] = useState<string | null>(null);
+  const [marchingArmyId, setMarchingArmyId] = useState<string | null>(null);
   const [log, setLog] = useState<string>("");
 
   if (!session || !setSession) return null;
@@ -70,7 +71,7 @@ export default function Home() {
     const result = applyMoveBattles(moved, id);
     armiesState.setArmies(result.armies);
     setLog(result.log[0] ?? "Marched.");
-    setSelectedArmyId(null);
+    setMarchingArmyId(null);
   }
 
   return (
@@ -119,11 +120,19 @@ export default function Home() {
             mapHeight={current.mapHeight}
             marchRange={turnMarchRange(current)}
             selectedArmyId={selectedArmyId}
+            marchingArmyId={marchingArmyId}
             pops={pops}
             nodes={nodesState.nodes}
             armies={armiesState.armies}
             nations={nations}
-            onSelectArmy={setSelectedArmyId}
+            onSelectArmy={(id) => {
+              setSelectedArmyId(id);
+              setMarchingArmyId(null);
+            }}
+            onStartMarch={(id) => {
+              setSelectedArmyId(id);
+              setMarchingArmyId(id);
+            }}
             onMoveArmy={moveArmy}
             onPlacePop={(y, x) => place(x, y)}
             onPlaceNode={(y, x) => nodesState.place(x, y)}

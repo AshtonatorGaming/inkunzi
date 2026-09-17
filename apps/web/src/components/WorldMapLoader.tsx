@@ -13,6 +13,7 @@ type Props = {
   mapHeight: number;
   marchRange: number;
   selectedArmyId: string | null;
+  marchingArmyId: string | null;
   pops: Pop[];
   nodes: ResourceNode[];
   armies: Army[];
@@ -28,6 +29,7 @@ type Props = {
   onRemoveNode: (id: string) => void;
   onUpdateArmy: (id: string, patch: Partial<Army>) => void;
   onRemoveArmy: (id: string) => void;
+  onStartMarch: (id: string) => void;
 };
 
 export default function WorldMapLoader(props: Props) {
