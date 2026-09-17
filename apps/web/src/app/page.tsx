@@ -72,6 +72,7 @@ export default function Home() {
     armiesState.setArmies(result.armies);
     setLog(result.log[0] ?? "Marched.");
     setMarchingArmyId(null);
+    setSelectedArmyId(null);
   }
 
   return (

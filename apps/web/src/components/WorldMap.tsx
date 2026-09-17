@@ -216,6 +216,7 @@ export default function WorldMap({
           <Circle
             center={[selected.y, selected.x]}
             radius={ZOC_PX}
+            interactive={false}
             pathOptions={{ color: "#cc6666", weight: 1, fillOpacity: 0.06 }}
           />
         )}
@@ -223,6 +224,7 @@ export default function WorldMap({
           <Circle
             center={[marching.y, marching.x]}
             radius={marchRange}
+            interactive={false}
             pathOptions={{ color: "#e2c44d", weight: 1, fillOpacity: 0.05 }}
           />
         )}
