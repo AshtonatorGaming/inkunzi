@@ -54,6 +54,7 @@ function MapPointer({
   onPlaceArmy,
   onMoveArmy,
   onPreview,
+  onSelectArmy,
 }: {
   tool: Tool;
   marchingArmyId: string | null;
@@ -64,6 +65,7 @@ function MapPointer({
   onPlaceArmy: (y: number, x: number) => void;
   onMoveArmy: (id: string, x: number, y: number) => void;
   onPreview: (preview: Preview | null) => void;
+  onSelectArmy: (id: string | null) => void;
 }) {
   useMapEvents({
     mousemove(e) {
@@ -107,10 +109,16 @@ function MapPointer({
         onPlaceArmy(y, x);
         return;
       }
-      if (!marchingArmyId) return;
+      if (!marchingArmyId) {
+        onSelectArmy(null);
+        return;
+      }
       const army = armies.find((a) => a.id === marchingArmyId);
       if (!army) return;
-      if (distance(army.x, army.y, x, y) > marchRange) return;
+      if (distance(army.x, army.y, x, y) > marchRange) {
+        onSelectArmy(null);
+        return;
+      }
       const foes = armies.filter(
         (a) =>
           a.id !== army.id &&
@@ -244,6 +252,7 @@ export default function WorldMap({
           onPlaceArmy={onPlaceArmy}
           onMoveArmy={onMoveArmy}
           onPreview={setPreview}
+          onSelectArmy={onSelectArmy}
         />
         {showAllZoc &&
           armies.map((army) => (
