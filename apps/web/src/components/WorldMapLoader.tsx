@@ -3,7 +3,10 @@
 import dynamic from "next/dynamic";
 import type { Army, Nation, Pop, ResourceNode } from "@/engine/types";
 
-const WorldMap = dynamic(() => import("./WorldMap"), { ssr: false });
+const WorldMap = dynamic(
+  () => import("./WorldMap").then((mod) => mod.default),
+  { ssr: false }
+);
 
 type Props = {
   mapWidth: number;
