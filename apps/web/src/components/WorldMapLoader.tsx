@@ -8,10 +8,14 @@ const WorldMap = dynamic(() => import("./WorldMap"), { ssr: false });
 type Props = {
   mapWidth: number;
   mapHeight: number;
+  marchRange: number;
+  selectedArmyId: string | null;
   pops: Pop[];
   nodes: ResourceNode[];
   armies: Army[];
   nations: Nation[];
+  onSelectArmy: (id: string | null) => void;
+  onMoveArmy: (id: string, x: number, y: number) => void;
   onPlacePop: (y: number, x: number) => void;
   onPlaceNode: (y: number, x: number) => void;
   onPlaceArmy: (y: number, x: number) => void;

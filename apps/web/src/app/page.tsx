@@ -14,6 +14,7 @@ import { tickAll } from "@/engine/tick";
 import { advanceDay, advanceTurn } from "@/engine/sessionStore";
 import { buildSnapshot, downloadSnapshot, parseSnapshot } from "@/engine/worldIO";
 import { makeWindow, type GameWindow } from "@/engine/windows";
+import { turnMarchRange } from "@/engine/movement";
 import type { Session } from "@/engine/types";
 
 export default function Home() {
@@ -23,6 +24,7 @@ export default function Home() {
   const armiesState = useArmies();
   const { session, setSession } = useSession();
   const [windows, setWindows] = useState<GameWindow[]>([]);
+  const [selectedArmyId, setSelectedArmyId] = useState<string | null>(null);
 
   if (!session || !setSession) return null;
 
@@ -102,10 +104,17 @@ export default function Home() {
           <WorldMapLoader
             mapWidth={current.mapWidth}
             mapHeight={current.mapHeight}
+            marchRange={turnMarchRange(current)}
+            selectedArmyId={selectedArmyId}
             pops={pops}
             nodes={nodesState.nodes}
             armies={armiesState.armies}
             nations={nations}
+            onSelectArmy={setSelectedArmyId}
+            onMoveArmy={(id, x, y) => {
+              armiesState.update(id, { x, y });
+              setSelectedArmyId(null);
+            }}
             onPlacePop={(y, x) => place(x, y)}
             onPlaceNode={(y, x) => nodesState.place(x, y)}
             onPlaceArmy={(y, x) => armiesState.place(x, y)}

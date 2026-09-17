@@ -5,12 +5,14 @@ import {
   MapContainer,
   ImageOverlay,
   CircleMarker,
+  Circle,
   Popup,
   useMapEvents,
 } from "react-leaflet";
 import { CRS, LatLngBounds } from "leaflet";
 import type { Army, Nation, Pop, ResourceNode } from "@/engine/types";
 import { MAP_LAYERS, colorFromKey, type MapLayer } from "@/engine/mapLayers";
+import { distance } from "@/engine/movement";
 import PopEditor from "./PopEditor";
 import NodeEditor from "./NodeEditor";
 import ArmyEditor from "./ArmyEditor";
@@ -20,10 +22,14 @@ type Tool = "none" | "pop" | "node" | "army";
 type Props = {
   mapWidth: number;
   mapHeight: number;
+  marchRange: number;
+  selectedArmyId: string | null;
   pops: Pop[];
   nodes: ResourceNode[];
   armies: Army[];
   nations: Nation[];
+  onSelectArmy: (id: string | null) => void;
+  onMoveArmy: (id: string, x: number, y: number) => void;
   onPlacePop: (y: number, x: number) => void;
   onPlaceNode: (y: number, x: number) => void;
   onPlaceArmy: (y: number, x: number) => void;
@@ -35,22 +41,50 @@ type Props = {
   onRemoveArmy: (id: string) => void;
 };
 
-function PlaceTool({
+function MapClicks({
   tool,
+  selectedArmyId,
+  armies,
+  marchRange,
   onPlacePop,
   onPlaceNode,
   onPlaceArmy,
+  onMoveArmy,
+  onSelectArmy,
 }: {
   tool: Tool;
+  selectedArmyId: string | null;
+  armies: Army[];
+  marchRange: number;
   onPlacePop: (y: number, x: number) => void;
   onPlaceNode: (y: number, x: number) => void;
   onPlaceArmy: (y: number, x: number) => void;
+  onMoveArmy: (id: string, x: number, y: number) => void;
+  onSelectArmy: (id: string | null) => void;
 }) {
   useMapEvents({
     click(e) {
-      if (tool === "pop") onPlacePop(e.latlng.lat, e.latlng.lng);
-      if (tool === "node") onPlaceNode(e.latlng.lat, e.latlng.lng);
-      if (tool === "army") onPlaceArmy(e.latlng.lat, e.latlng.lng);
+      const y = e.latlng.lat;
+      const x = e.latlng.lng;
+      if (tool === "pop") {
+        onPlacePop(y, x);
+        return;
+      }
+      if (tool === "node") {
+        onPlaceNode(y, x);
+        return;
+      }
+      if (tool === "army") {
+        onPlaceArmy(y, x);
+        return;
+      }
+      if (selectedArmyId) {
+        const army = armies.find((a) => a.id === selectedArmyId);
+        if (army && distance(army.x, army.y, x, y) <= marchRange) {
+          onMoveArmy(selectedArmyId, x, y);
+        }
+        onSelectArmy(null);
+      }
     },
   });
   return null;
@@ -59,10 +93,14 @@ function PlaceTool({
 export default function WorldMap({
   mapWidth,
   mapHeight,
+  marchRange,
+  selectedArmyId,
   pops,
   nodes,
   armies,
   nations,
+  onSelectArmy,
+  onMoveArmy,
   onPlacePop,
   onPlaceNode,
   onPlaceArmy,
@@ -82,6 +120,7 @@ export default function WorldMap({
     [-PAD, -PAD],
     [mapHeight + PAD, mapWidth + PAD]
   );
+  const selected = armies.find((a) => a.id === selectedArmyId);
 
   const showPops =
     layer === "all" ||
@@ -154,12 +193,24 @@ export default function WorldMap({
         style={{ height: "100%", width: "100%", background: "#1a1a16" }}
       >
         <ImageOverlay url="/maps/world.png" bounds={BOUNDS} />
-        <PlaceTool
+        <MapClicks
           tool={tool}
+          selectedArmyId={selectedArmyId}
+          armies={armies}
+          marchRange={marchRange}
           onPlacePop={onPlacePop}
           onPlaceNode={onPlaceNode}
           onPlaceArmy={onPlaceArmy}
+          onMoveArmy={onMoveArmy}
+          onSelectArmy={onSelectArmy}
         />
+        {selected && (
+          <Circle
+            center={[selected.y, selected.x]}
+            radius={marchRange}
+            pathOptions={{ color: "#e2c44d", weight: 1, fillOpacity: 0.08 }}
+          />
+        )}
         {showPops &&
           pops.map((pop) => (
             <CircleMarker
@@ -212,8 +263,15 @@ export default function WorldMap({
               key={army.id}
               center={[army.y, army.x]}
               radius={10}
+              eventHandlers={{
+                click: (e) => {
+                  e.originalEvent.stopPropagation();
+                  if (tool !== "none") return;
+                  onSelectArmy(army.id);
+                },
+              }}
               pathOptions={{
-                color: "#111",
+                color: army.id === selectedArmyId ? "#e2c44d" : "#111",
                 fillColor: colorById.get(army.ownerId) ?? "#ccc",
                 fillOpacity: 0.95,
                 weight: 3,
